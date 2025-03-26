@@ -620,6 +620,10 @@ PrefabInstance:
 
 '
       objectReference: {fileID: 0}
+    - target: {fileID: 5688631044876179558, guid: c45041f43743ded48bcedcf90819a218, type: 3}
+      propertyPath: m_text
+      value: Void Jumper
+      objectReference: {fileID: 0}
     - target: {fileID: 5700617570501496030, guid: c45041f43743ded48bcedcf90819a218, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

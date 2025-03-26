@@ -49,54 +49,36 @@ public class PlayerAnimator : MonoBehaviour
     /// void (no return)
     /// </summary>
     void ReadPlayerStateAndAnimate()
+{
+    // Reset all animation flags first
+    animator.SetBool("isIdle", false);
+    animator.SetBool("isJumping", false);
+    animator.SetBool("isFalling", false);
+    animator.SetBool("isRunning", false);
+    animator.SetBool("isDead", false);
+    animator.SetBool("isRespawning", false); // Add this line if it's not already there
+
+    // Only play one animation based on current state
+    switch (playerController.state)
     {
-        if (animator == null)
-        {
-            return;
-        }
-        if (playerController.state == PlayerController.PlayerState.Idle)
-        {
+        case PlayerController.PlayerState.Idle:
             animator.SetBool("isIdle", true);
-        }
-        else
-        {
-            animator.SetBool("isIdle", false);
-        }
-
-        if (playerController.state == PlayerController.PlayerState.Jump)
-        {
+            break;
+        case PlayerController.PlayerState.Jump:
             animator.SetBool("isJumping", true);
-        }
-        else
-        {
-            animator.SetBool("isJumping", false);
-        }
-
-        if (playerController.state == PlayerController.PlayerState.Fall)
-        {
+            break;
+        case PlayerController.PlayerState.Fall:
             animator.SetBool("isFalling", true);
-        }
-        else
-        {
-            animator.SetBool("isFalling", false);
-        }
-
-        if (playerController.state == PlayerController.PlayerState.Walk)
-        {
+            break;
+        case PlayerController.PlayerState.Walk:
             animator.SetBool("isRunning", true);
-        }
-        else
-        {
-            animator.SetBool("isRunning", false);
-        }
-
-        if (playerController.state == PlayerController.PlayerState.Dead)
-        {
+            break;
+        case PlayerController.PlayerState.Dead:
             animator.SetBool("isDead", true);
-        }
-        else
-        {
-            animator.SetBool("isDead", false);
-        }
+            break;
+        case PlayerController.PlayerState.Respawning:
+            animator.SetBool("isRespawning", true); // ✅ Only animate Respawn here!
+            break;
     }
+}
 }
