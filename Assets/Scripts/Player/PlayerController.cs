@@ -94,9 +94,16 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The input action(s) that map to jumping")]
     public InputAction jumpAction;
 
+
+
     // The number of times this player has jumped since being grounded
     private int timesJumped = 0;
     // Whether the player is in the middle of a jump right now
+    // Whether or not the player is allowed to move
+    private bool canMove = true;
+
+    private bool isRespawning = false;
+
     private bool jumping = false;
 
     #region Player State Variables
@@ -109,7 +116,8 @@ public class PlayerController : MonoBehaviour
         Walk,
         Jump,
         Fall,
-        Dead
+        Dead,
+        Respawning
     }
 
     // The player's current state (walking, idle, jumping, or falling)
@@ -189,7 +197,8 @@ public class PlayerController : MonoBehaviour
     private void HandleMovementInput()
     {
         Vector2 movementForce = Vector2.zero;
-        if (Mathf.Abs(moveAction.ReadValue<Vector2>().x) > 0 && state != PlayerState.Dead)
+        if (Mathf.Abs(moveAction.ReadValue<Vector2>().x) > 0 && state != PlayerState.Dead && canMove)
+
         {
             movementForce = transform.right * movementSpeed * moveAction.ReadValue<Vector2>().x;
         }
@@ -245,7 +254,8 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     private void HandleJumpInput()
     {
-        if (jumpAction.triggered)
+        if (jumpAction.triggered && canMove)
+
         {
             StartCoroutine("Jump", 1.0f);
         }
@@ -315,6 +325,17 @@ public class PlayerController : MonoBehaviour
             StartCoroutine("Jump", 1.0f);
         }
     }
+    public void DisableMovement(float duration)
+    {
+        StartCoroutine(DisableMovementCoroutine(duration));
+    }
+
+    private IEnumerator DisableMovementCoroutine(float duration)
+    {
+        canMove = false;
+        yield return new WaitForSeconds(duration);
+        canMove = true;
+    }
 
     /// <summary>
     /// Description:
@@ -354,6 +375,23 @@ public class PlayerController : MonoBehaviour
     {
         return state;
     }
+    public void FinishRespawn()
+{
+    SetState(PlayerState.Idle); // Set to Idle first
+
+    Animator animator = GetComponent<Animator>();
+    if (animator != null)
+    {
+        animator.SetBool("isRespawning", false);
+    }
+
+    // Force reevaluation of movement & animation
+    ProcessInput();         // Check if movement input is already being held
+    DetermineState();       // Recalculate the correct state (Idle vs Walk)
+}
+
+
+
 
     /// <summary>
     /// Description:
@@ -364,10 +402,11 @@ public class PlayerController : MonoBehaviour
     /// void (no return)
     /// </summary>
     /// <param name="newState">The PlayerState to set the current state to</param>
-    private void SetState(PlayerState newState)
-    {
-        state = newState;
-    }
+public void SetState(PlayerState newState)
+{
+    state = newState;
+    isRespawning = (newState == PlayerState.Respawning);
+}
 
     /// <summary>
     /// Description:
@@ -377,39 +416,44 @@ public class PlayerController : MonoBehaviour
     /// Return: 
     /// void (no return)
     /// </summary>
-    private void DetermineState()
+private void DetermineState()
+{
+    if (isRespawning)
+        return;
+
+    if (playerHealth.currentHealth <= 0)
     {
-        if (playerHealth.currentHealth <= 0)
+        SetState(PlayerState.Dead);
+    }
+    else if (grounded)
+    {
+        if (playerRigidbody.velocity.magnitude > 0)
         {
-            SetState(PlayerState.Dead);
-        }
-        else if (grounded)
-        {
-            if (playerRigidbody.velocity.magnitude > 0)
-            {
-                SetState(PlayerState.Walk);
-            }
-            else
-            {
-                SetState(PlayerState.Idle);
-            }
-            if (!jumping)
-            {
-                timesJumped = 0;
-            }
+            SetState(PlayerState.Walk);
         }
         else
         {
-            if (jumping)
-            {
-                SetState(PlayerState.Jump);
-            }
-            else
-            {
-                SetState(PlayerState.Fall);
-            }
+            SetState(PlayerState.Idle);
+        }
+
+        if (!jumping)
+        {
+            timesJumped = 0;
         }
     }
+    else
+    {
+        if (jumping)
+        {
+            SetState(PlayerState.Jump);
+        }
+        else
+        {
+            SetState(PlayerState.Fall);
+        }
+    }
+}
+
     #endregion
 
     /// <summary>

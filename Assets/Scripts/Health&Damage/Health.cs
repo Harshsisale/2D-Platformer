@@ -10,6 +10,7 @@ using UnityEngine;
 /// </summary>
 public class Health : MonoBehaviour
 {
+
     [Header("Team Settings")]
     [Tooltip("The team associated with this damage")]
     public int teamId = 0;
@@ -131,11 +132,32 @@ public class Health : MonoBehaviour
     /// void (no return)
     /// </summary>
     void Respawn()
-    {
-        transform.position = respawnPosition;
-        currentHealth = defaultHealth;
-        GameManager.UpdateUIElements();
-    }
+{
+    transform.position = respawnPosition;
+    currentHealth = defaultHealth;
+   PlayerController controller = GetComponent<PlayerController>();
+   Animator animator = GetComponent<Animator>();
+if (animator != null)
+{
+    animator.SetBool("isRespawning", true); // ✅ This starts the Respawn animation
+}
+ 
+
+if (controller != null)
+{
+    controller.SetState(PlayerController.PlayerState.Respawning);
+    controller.DisableMovement(1f);
+
+    // Optionally fallback if you don’t use Animation Events
+    controller.Invoke(nameof(controller.FinishRespawn), 0.8f); // duration = length of respawn anim
+}
+
+
+
+
+    GameManager.UpdateUIElements();
+}
+
 
     /// <summary>
     /// Description:
@@ -243,6 +265,29 @@ public class Health : MonoBehaviour
     /// Returns:
     /// void (no return)
     /// </summary>
+    /// 
+    public void RespawnDirectly(Transform overrideRespawnPoint = null)
+{
+    // If an override is provided (like from KillZone), use that
+    if (overrideRespawnPoint != null)
+    {
+        transform.position = overrideRespawnPoint.position;
+    }
+    else
+    {
+        transform.position = respawnPosition;
+    }
+
+    PlayerController controller = GetComponent<PlayerController>();
+    if (controller != null)
+    {
+        controller.SetState(PlayerController.PlayerState.Respawning);
+        controller.DisableMovement(1f);
+    }
+
+}
+
+
     void Die()
     {
         if (deathEffect != null)
