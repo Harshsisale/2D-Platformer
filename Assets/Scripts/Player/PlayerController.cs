@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.XR;
 
 /// <summary>
 /// Class which handles player movement
@@ -94,6 +95,19 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The input action(s) that map to jumping")]
     public InputAction jumpAction;
 
+    [Tooltip("The input action that triggers dashing")]
+    public InputAction dashAction;
+
+
+    [Header("Dash Settings")]
+    public float dashForce = 15f;
+    public float dashDuration = 0.2f;
+    public float dashCooldown = 1.0f;
+
+    private bool isDashing = false;
+    private bool canDash = true;
+
+
 
 
     // The number of times this player has jumped since being grounded
@@ -117,7 +131,8 @@ public class PlayerController : MonoBehaviour
         Jump,
         Fall,
         Dead,
-        Respawning
+        Respawning,
+        Dash
     }
 
     // The player's current state (walking, idle, jumping, or falling)
@@ -134,6 +149,7 @@ public class PlayerController : MonoBehaviour
     {
         moveAction.Enable();
         jumpAction.Enable();
+        dashAction.Enable();
     }
 
     /// <summary>
@@ -143,6 +159,7 @@ public class PlayerController : MonoBehaviour
     {
         moveAction.Disable();
         jumpAction.Disable();
+        dashAction.Disable();
     }
 
     /// <summary>
@@ -186,7 +203,38 @@ public class PlayerController : MonoBehaviour
     {
         HandleMovementInput();
         HandleJumpInput();
+        HandleDashInput();
     }
+    private void HandleDashInput()
+{
+    if (dashAction.triggered && canDash && !isDashing && state != PlayerState.Dead && state != PlayerState.Respawning)
+    {
+        StartCoroutine(Dash());
+    }
+}
+
+private IEnumerator Dash()
+{   
+    Debug.Log("Dashing...");
+
+    isDashing = true;
+    canDash = false;
+
+    SetState(PlayerState.Dash);
+
+    Vector2 dashDirection = facing == PlayerDirection.Left ? Vector2.left : Vector2.right;
+    playerRigidbody.velocity = dashDirection * dashForce;
+
+    yield return new WaitForSeconds(dashDuration);
+
+    isDashing = false;
+    SetState(PlayerState.Idle);
+    playerRigidbody.velocity = Vector2.zero;
+
+    yield return new WaitForSeconds(dashCooldown);
+    canDash = true;
+}
+
 
     /// <summary>
     /// Description:
@@ -197,7 +245,7 @@ public class PlayerController : MonoBehaviour
     private void HandleMovementInput()
     {
         Vector2 movementForce = Vector2.zero;
-        if (Mathf.Abs(moveAction.ReadValue<Vector2>().x) > 0 && state != PlayerState.Dead && canMove)
+        if (Mathf.Abs(moveAction.ReadValue<Vector2>().x) > 0 && state != PlayerState.Dead && canMove && !isDashing)
 
         {
             movementForce = transform.right * movementSpeed * moveAction.ReadValue<Vector2>().x;
@@ -216,6 +264,11 @@ public class PlayerController : MonoBehaviour
     /// <param name="movementForce">The force with which to move the player</param>
     private void MovePlayer(Vector2 movementForce)
     {
+        if (isDashing) 
+        {
+            return;
+        } // Prevent movement override
+
         if (grounded && !jumping)
         {
             float horizontalVelocity = movementForce.x;
@@ -418,8 +471,9 @@ public void SetState(PlayerState newState)
     /// </summary>
 private void DetermineState()
 {
-    if (isRespawning)
+    if (isRespawning || isDashing){
         return;
+    }
 
     if (playerHealth.currentHealth <= 0)
     {

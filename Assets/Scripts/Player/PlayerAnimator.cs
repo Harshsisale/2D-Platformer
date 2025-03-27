@@ -56,7 +56,9 @@ public class PlayerAnimator : MonoBehaviour
     animator.SetBool("isFalling", false);
     animator.SetBool("isRunning", false);
     animator.SetBool("isDead", false);
-    animator.SetBool("isRespawning", false); // Add this line if it's not already there
+    animator.SetBool("isRespawning", false); 
+    animator.SetBool("isDashing", false);
+
 
     // Only play one animation based on current state
     switch (playerController.state)
@@ -79,6 +81,11 @@ public class PlayerAnimator : MonoBehaviour
         case PlayerController.PlayerState.Respawning:
             animator.SetBool("isRespawning", true); // ✅ Only animate Respawn here!
             break;
+        case PlayerController.PlayerState.Dash:
+            Debug.Log("Setting isDashing = true");
+            animator.SetBool("isDashing", true);
+            break;
+
     }
 }
 }

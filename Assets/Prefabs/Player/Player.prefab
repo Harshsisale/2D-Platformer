@@ -391,6 +391,26 @@ MonoBehaviour:
       m_Action: Jump
       m_Flags: 0
     m_Flags: 0
+  dashAction:
+    m_Name: Dash
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: cea6c5ba-5de6-4bea-bb94-75d8bcbc1f31
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 5a90fe48-814e-492b-a105-8741703ea77f
+      m_Path: <Keyboard>/shift
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Dash
+      m_Flags: 0
+    m_Flags: 0
+  dashForce: 10
+  dashDuration: 0.3
+  dashCooldown: 1
   state: 0
 --- !u!114 &8128307141711142836
 MonoBehaviour:
